@@ -54,17 +54,39 @@ int dict_insert(dictionary dict, char *key, void *val)
     tmp->hash = hash;
     tmp->data = val;
     tmp->key = strdup(key);
-    if(!dict->item_array[index]) {
-        dict->item_array[index] = tmp;
-        ++dict->num_items;
+    dict_item at_index = dict->item_array[index];
+    if(!at_index || at_index->hash == hash) {
+        if(!at_index) {
+            dict->item_array[index] = tmp;
+            ++dict->num_items;
+        } else {
+            if(dict->free_item)
+                dict->free_item(at_index);
+            else
+                free(at_index->data);
+            *at_index = *tmp;
+            ++dict->num_items;
+        }
         return 0;
     }
 #if PROBING_SCHEME==LINEAR_PROBING
     int size = dict->alloc_count;
     while(++index%size != size) {
-        if(!dict->item_array[index%size]) {
-            dict->item_array[index] = tmp;
-            return 0;
+        dict_item at_index = dict->item_array[index%size];
+        if(!at_index || at_index->hash == hash) {
+            if(!at_index) {
+                dict->item_array[index] = tmp;
+                ++dict->num_items;
+                return 0;
+            } else {
+                if(dict->free_item)
+                    dict->free_item(at_index->data);
+                else
+                    free(at_index->data);
+                *at_index = *tmp;
+                ++dict->num_items;
+                return 0;
+            }
         }
     }
     free(tmp->key);
