@@ -160,6 +160,7 @@ void dict_free(dictionary dict)
             dict->free_item(dict->item_array[i]);
         }
     }
+    free(dict->item_array);
 #elif INDIVIDUAL_FUNCTIONS==1
     for(int i = 0; i < dict->alloc_count; ++i) {
         if(dict->item_array[i]) {
@@ -168,10 +169,14 @@ void dict_free(dictionary dict)
                         dict->item_array[i]->data);
             } else free(dict->item_array[i]->data);
         free(dict->item_array[i]->key);
+        free(dict->item_array[i]);
         }
     }
+    free(dict->item_array);
+    free(dict);
 #endif
 #if INDIVIDUAL_FUNCTIONS==0
+    free(dict);
 }
 #endif
 }
